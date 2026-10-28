@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Student Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2>Student Dashboard</h2>
+  <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger">Logout</a>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card text-center">
+      <div class="card-body">
+        <h3>{{ available_exams|length }}</h3>
+        <small>Available Exams</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card text-center">
+      <div class="card-body">
+        <h3>{{ my_bookings|selectattr('status', 'equalto', 'Booked')|list|length }}</h3>
+        <small>Active Bookings</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="list-group mb-4">
+  <a href="{{ url_for('student.exams') }}" class="list-group-item list-group-item-action">Browse & Book Exams</a>
+  <a href="{{ url_for('student.my_bookings') }}" class="list-group-item list-group-item-action">My Bookings & History</a>
+</div>
+
+<h4>My Recent Bookings</h4>
+{% if my_bookings %}
+  <ul class="list-group">
+    {% for b in my_bookings[:5] %}
+    <li class="list-group-item d-flex justify-content-between">
+      <span>{{ b.exam.title }} ({{ b.slot.date }} {{ b.slot.start_time.strftime('%H:%M') }})</span>
+      <span class="badge {% if b.status == 'Booked' %}bg-success{% else %}bg-secondary{% endif %}">
+        {{ b.status }}
+      </span>
+    </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p class="text-muted">No bookings yet.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Examiner Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2>Examiner Dashboard</h2>
+  <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger">Logout</a>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-4">
+    <div class="card text-center">
+      <div class="card-body">
+        <h3>{{ assigned_exams|length }}</h3>
+        <small>Assigned Exams</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card text-center">
+      <div class="card-body">
+        <h3>{{ my_slots|length }}</h3>
+        <small>My Slots</small>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="card text-center">
+      <div class="card-body">
+        <h3>{{ booked_count }}</h3>
+        <small>Students Booked</small>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="list-group">
+  <a href="{{ url_for('examiner.my_exams') }}" class="list-group-item list-group-item-action">
+    View My Assigned Exams & Create Slots
+  </a>
+</div>
+{% endblock %}

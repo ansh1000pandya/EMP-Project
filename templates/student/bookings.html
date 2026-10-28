@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}My Bookings{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between mb-3">
+  <h2>My Bookings & History</h2>
+  <a href="{{ url_for('student.dashboard') }}" class="btn btn-secondary">Dashboard</a>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in messages %}<div class="alert alert-{{ cat }}">{{ msg }}</div>{% endfor %}
+{% endwith %}
+
+<table class="table table-bordered table-hover">
+  <thead class="table-dark">
+    <tr>
+      <th>Exam</th>
+      <th>Date & Time</th>
+      <th>Examiner</th>
+      <th>Status</th>
+      <th>Booked At</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for b in bookings %}
+    <tr>
+      <td>{{ b.exam.title }}</td>
+      <td>{{ b.slot.date }} {{ b.slot.start_time.strftime('%H:%M') }}</td>
+      <td>{{ b.slot.examiner.full_name }}</td>
+      <td>
+        <span class="badge 
+          {% if b.status == 'Booked' %}bg-success
+          {% elif b.status == 'Cancelled' %}bg-danger
+          {% else %}bg-secondary{% endif %}">
+          {{ b.status }}
+        </span>
+      </td>
+      <td>{{ b.booked_at.strftime('%Y-%m-%d %H:%M') }}</td>
+      <td>
+        {% if b.status == 'Booked' %}
+          <form action="{{ url_for('student.cancel_booking', booking_id=b.id) }}" method="POST" class="d-inline"
+                onsubmit="return confirm('Cancel this booking?');">
+            <button class="btn btn-sm btn-danger">Cancel</button>
+          </form>
+        {% else %}
+          —
+        {% endif %}
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" class="text-center">No bookings yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

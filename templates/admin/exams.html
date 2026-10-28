@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Exams{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between mb-3">
+  <h2>Exams</h2>
+  <div>
+    <a href="{{ url_for('admin.add_exam') }}" class="btn btn-primary">Add Exam</a>
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">Dashboard</a>
+  </div>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in messages %}<div class="alert alert-{{ cat }}">{{ msg }}</div>{% endfor %}
+{% endwith %}
+
+<table class="table table-bordered table-hover">
+  <thead class="table-dark">
+    <tr>
+      <th>Title</th><th>Course</th><th>Type</th><th>Status</th>
+      <th>Slot Window</th><th>Booking Window</th><th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for e in exams %}
+    <tr>
+      <td>{{ e.title }}</td>
+      <td>{{ e.course.code }}</td>
+      <td>{{ e.exam_type }}</td>
+      <td><span class="badge bg-secondary">{{ e.status }}</span></td>
+      <td>
+        {% if e.slot_creation_start %}
+          {{ e.slot_creation_start.strftime('%Y-%m-%d %H:%M') }} → {{ e.slot_creation_end.strftime('%Y-%m-%d %H:%M') if e.slot_creation_end else '?' }}
+        {% else %}-{% endif %}
+      </td>
+      <td>
+        {% if e.booking_start %}
+          {{ e.booking_start.strftime('%Y-%m-%d %H:%M') }} → {{ e.booking_end.strftime('%Y-%m-%d %H:%M') if e.booking_end else '?' }}
+        {% else %}-{% endif %}
+      </td>
+      <td>
+        <a href="{{ url_for('admin.edit_exam', id=e.id) }}" class="btn btn-sm btn-warning">Edit</a>
+        <a href="{{ url_for('admin.rubrics', exam_id=e.id) }}" class="btn btn-sm btn-info">Rubrics</a>
+        <a href="{{ url_for('admin.assign_examiners', exam_id=e.id) }}" class="btn btn-sm btn-success">Assign</a>
+        <form action="{{ url_for('admin.delete_exam', id=e.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this exam?');">
+          <button class="btn btn-sm btn-danger">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="7" class="text-center">No exams yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

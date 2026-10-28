@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Browse Exams{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between mb-3">
+  <h2>Browse Exams</h2>
+  <a href="{{ url_for('student.dashboard') }}" class="btn btn-secondary">Dashboard</a>
+</div>
+
+<form method="GET" class="row g-2 mb-4">
+  <div class="col-md-5">
+    <input type="text" name="q" class="form-control" placeholder="Search by title..." value="{{ q }}">
+  </div>
+  <div class="col-md-3">
+    <select name="type" class="form-select">
+      <option value="">All Types</option>
+      {% for t in ['Viva', 'Practical', 'Project Demo', 'Assessment'] %}
+        <option value="{{ t }}" {% if exam_type == t %}selected{% endif %}>{{ t }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-2">
+    <button class="btn btn-primary w-100">Search</button>
+  </div>
+</form>
+
+<table class="table table-bordered table-hover">
+  <thead class="table-dark">
+    <tr>
+      <th>Title</th>
+      <th>Course</th>
+      <th>Type</th>
+      <th>Status</th>
+      <th>Booking Window</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for e in exams %}
+    <tr>
+      <td>{{ e.title }}</td>
+      <td>{{ e.course.code }}</td>
+      <td>{{ e.exam_type }}</td>
+      <td><span class="badge bg-secondary">{{ e.status }}</span></td>
+      <td>
+        {% if e.booking_start %}
+          {{ e.booking_start.strftime('%Y-%m-%d') }} → {{ e.booking_end.strftime('%Y-%m-%d') if e.booking_end else '?' }}
+        {% else %}-{% endif %}
+      </td>
+      <td>
+        <a href="{{ url_for('student.exam_slots', exam_id=e.id) }}" class="btn btn-sm btn-primary">View Slots</a>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" class="text-center">No exams found.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

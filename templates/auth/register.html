@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Register – EMP{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="card shadow">
+      <div class="card-header bg-success text-white">
+        <h4 class="mb-0">Register (Examiner / Student)</h4>
+      </div>
+      <div class="card-body">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+          <div class="mb-3">
+            <label class="form-label">Full Name</label>
+            <input type="text" name="full_name" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Username</label>
+            <input type="text" name="username" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input type="password" name="password" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Role</label>
+            <select name="role" class="form-select" required id="roleSelect">
+              <option value="">-- Select Role --</option>
+              <option value="student">Student</option>
+              <option value="examiner">Examiner</option>
+            </select>
+          </div>
+
+          <!-- Extra fields for Examiner (shown only when Examiner is selected) -->
+          <div id="examinerFields" style="display:none;">
+            <div class="mb-3">
+              <label class="form-label">Department</label>
+              <input type="text" name="department" class="form-control">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Contact Number</label>
+              <input type="text" name="contact" class="form-control">
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-success w-100">Register</button>
+        </form>
+        <hr>
+        <p class="text-center mb-0">
+          Already have an account? <a href="{{ url_for('auth.login') }}">Login</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tiny pure HTML/CSS toggle – no JavaScript needed for core logic -->
+<script>
+  // This is only UI sugar; the backend still validates everything.
+  document.getElementById('roleSelect').addEventListener('change', function() {
+    document.getElementById('examinerFields').style.display =
+      this.value === 'examiner' ? 'block' : 'none';
+  });
+</script>
+{% endblock %}

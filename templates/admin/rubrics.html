@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Rubrics – {{ exam.title }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between mb-3">
+  <h2>Rubrics for: {{ exam.title }}</h2>
+  <div>
+    <a href="{{ url_for('admin.add_rubric', exam_id=exam.id) }}" class="btn btn-primary">Add Rubric</a>
+    <a href="{{ url_for('admin.exams') }}" class="btn btn-secondary">Back to Exams</a>
+  </div>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in messages %}<div class="alert alert-{{ cat }}">{{ msg }}</div>{% endfor %}
+{% endwith %}
+
+<table class="table table-bordered">
+  <thead class="table-dark">
+    <tr><th>Criterion</th><th>Max Marks</th><th>Description</th><th>Actions</th></tr>
+  </thead>
+  <tbody>
+    {% for r in rubrics %}
+    <tr>
+      <td>{{ r.criterion }}</td>
+      <td>{{ r.max_marks }}</td>
+      <td>{{ r.description or '-' }}</td>
+      <td>
+        <a href="{{ url_for('admin.edit_rubric', id=r.id) }}" class="btn btn-sm btn-warning">Edit</a>
+        <form action="{{ url_for('admin.delete_rubric', id=r.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete?');">
+          <button class="btn btn-sm btn-danger">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="4" class="text-center">No rubrics yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

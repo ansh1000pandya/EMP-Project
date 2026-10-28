@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}My Assigned Exams{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between mb-3">
+  <h2>My Assigned Exams</h2>
+  <a href="{{ url_for('examiner.dashboard') }}" class="btn btn-secondary">Dashboard</a>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in messages %}<div class="alert alert-{{ cat }}">{{ msg }}</div>{% endfor %}
+{% endwith %}
+
+<table class="table table-bordered table-hover">
+  <thead class="table-dark">
+    <tr>
+      <th>Title</th>
+      <th>Course</th>
+      <th>Type</th>
+      <th>Status</th>
+      <th>Slot Creation Window</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for e in exams %}
+    <tr>
+      <td>{{ e.title }}</td>
+      <td>{{ e.course.code }}</td>
+      <td>{{ e.exam_type }}</td>
+      <td><span class="badge bg-secondary">{{ e.status }}</span></td>
+      <td>
+        {% if e.slot_creation_start %}
+          {{ e.slot_creation_start.strftime('%Y-%m-%d %H:%M') }}
+          →
+          {{ e.slot_creation_end.strftime('%Y-%m-%d %H:%M') if e.slot_creation_end else '?' }}
+        {% else %}
+          Not set
+        {% endif %}
+      </td>
+      <td>
+        <a href="{{ url_for('examiner.exam_slots', exam_id=e.id) }}" class="btn btn-sm btn-primary">
+          Manage Slots
+        </a>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" class="text-center">No exams assigned to you yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

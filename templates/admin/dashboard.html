@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2>Admin Dashboard</h2>
+  <a href="{{ url_for('auth.logout') }}" class="btn btn-outline-danger">Logout</a>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-md-2"><div class="card text-center"><div class="card-body"><h3>{{ counts.courses }}</h3><small>Courses</small></div></div></div>
+  <div class="col-md-2"><div class="card text-center"><div class="card-body"><h3>{{ counts.exams }}</h3><small>Exams</small></div></div></div>
+  <div class="col-md-2"><div class="card text-center"><div class="card-body"><h3>{{ counts.examiners }}</h3><small>Examiners</small></div></div></div>
+  <div class="col-md-2"><div class="card text-center"><div class="card-body"><h3>{{ counts.students }}</h3><small>Students</small></div></div></div>
+  <div class="col-md-2"><div class="card text-center bg-warning"><div class="card-body"><h3>{{ counts.pending_examiners }}</h3><small>Pending</small></div></div></div>
+</div>
+
+<div class="list-group">
+  <a href="{{ url_for('admin.courses') }}" class="list-group-item list-group-item-action">Manage Courses</a>
+  <a href="{{ url_for('admin.exams') }}" class="list-group-item list-group-item-action">Manage Exams</a>
+  <a href="{{ url_for('admin.examiners') }}" class="list-group-item list-group-item-action">Manage Examiners (Approve / Deactivate)</a>
+</div>
+{% endblock %}

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Examiners{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between mb-3">
+  <h2>Examiners</h2>
+  <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">Dashboard</a>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in messages %}<div class="alert alert-{{ cat }}">{{ msg }}</div>{% endfor %}
+{% endwith %}
+
+<table class="table table-bordered table-hover">
+  <thead class="table-dark">
+    <tr><th>Name</th><th>Username</th><th>Department</th><th>Contact</th><th>Status</th><th>Actions</th></tr>
+  </thead>
+  <tbody>
+    {% for u in examiners %}
+    <tr>
+      <td>{{ u.full_name }}</td>
+      <td>{{ u.username }}</td>
+      <td>{{ u.examiner_profile.department if u.examiner_profile else '-' }}</td>
+      <td>{{ u.examiner_profile.contact if u.examiner_profile else '-' }}</td>
+      <td>
+        {% if u.examiner_profile %}
+          <span class="badge 
+            {% if u.examiner_profile.status == 'Approved' %}bg-success
+            {% elif u.examiner_profile.status == 'Pending' %}bg-warning
+            {% else %}bg-danger{% endif %}">
+            {{ u.examiner_profile.status }}
+          </span>
+        {% else %}-{% endif %}
+      </td>
+      <td>
+        {% if u.examiner_profile and u.examiner_profile.status != 'Approved' %}
+          <form action="{{ url_for('admin.approve_examiner', user_id=u.id) }}" method="POST" class="d-inline">
+            <button class="btn btn-sm btn-success">Approve</button>
+          </form>
+        {% endif %}
+        {% if u.examiner_profile and u.examiner_profile.status != 'Deactivated' %}
+          <form action="{{ url_for('admin.deactivate_examiner', user_id=u.id) }}" method="POST" class="d-inline">
+            <button class="btn btn-sm btn-danger">Deactivate</button>
+          </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" class="text-center">No examiners registered yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

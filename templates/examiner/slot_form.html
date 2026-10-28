@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit' if slot else 'Add' }} Slot{% endblock %}
+
+{% block content %}
+<h2>{{ 'Edit' if slot else 'Add' }} Slot for {{ exam.title }}</h2>
+
+<form method="POST">
+  <div class="mb-3">
+    <label class="form-label">Date *</label>
+    <input type="date" name="date" class="form-control"
+           value="{{ slot.date if slot else '' }}" required>
+  </div>
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <label class="form-label">Start Time *</label>
+      <input type="time" name="start_time" class="form-control"
+             value="{{ slot.start_time.strftime('%H:%M') if slot else '' }}" required>
+    </div>
+    <div class="col-md-6 mb-3">
+      <label class="form-label">End Time *</label>
+      <input type="time" name="end_time" class="form-control"
+             value="{{ slot.end_time.strftime('%H:%M') if slot else '' }}" required>
+    </div>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Capacity *</label>
+    <input type="number" name="capacity" class="form-control" min="1"
+           value="{{ slot.capacity if slot else 1 }}" required>
+  </div>
+
+  <button type="submit" class="btn btn-primary">Save Slot</button>
+  <a href="{{ url_for('examiner.exam_slots', exam_id=exam.id) }}" class="btn btn-secondary">Cancel</a>
+</form>
+{% endblock %}

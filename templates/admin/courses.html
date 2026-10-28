@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Courses{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between mb-3">
+  <h2>Courses</h2>
+  <div>
+    <a href="{{ url_for('admin.add_course') }}" class="btn btn-primary">Add Course</a>
+    <a href="{{ url_for('admin.dashboard') }}" class="btn btn-secondary">Dashboard</a>
+  </div>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in messages %}<div class="alert alert-{{ cat }}">{{ msg }}</div>{% endfor %}
+{% endwith %}
+
+<table class="table table-bordered table-hover">
+  <thead class="table-dark">
+    <tr><th>Code</th><th>Name</th><th>Description</th><th>Actions</th></tr>
+  </thead>
+  <tbody>
+    {% for c in courses %}
+    <tr>
+      <td>{{ c.code }}</td>
+      <td>{{ c.name }}</td>
+      <td>{{ c.description or '-' }}</td>
+      <td>
+        <a href="{{ url_for('admin.edit_course', id=c.id) }}" class="btn btn-sm btn-warning">Edit</a>
+        <form action="{{ url_for('admin.delete_course', id=c.id) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this course?');">
+          <button class="btn btn-sm btn-danger">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="4" class="text-center">No courses yet.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

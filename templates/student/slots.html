@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}Slots – {{ exam.title }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between mb-3">
+  <h2>Slots for: {{ exam.title }}</h2>
+  <a href="{{ url_for('student.exams') }}" class="btn btn-secondary">Back</a>
+</div>
+
+{% if existing_booking %}
+  <div class="alert alert-info">
+    You already have a booking for this exam 
+    ({{ existing_booking.slot.date }} {{ existing_booking.slot.start_time.strftime('%H:%M') }}).
+  </div>
+{% elif not can_book %}
+  <div class="alert alert-warning">
+    Booking is currently closed for this exam.
+  </div>
+{% endif %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% for cat, msg in messages %}<div class="alert alert-{{ cat }}">{{ msg }}</div>{% endfor %}
+{% endwith %}
+
+<table class="table table-bordered table-hover">
+  <thead class="table-dark">
+    <tr>
+      <th>Date</th>
+      <th>Time</th>
+      <th>Examiner</th>
+      <th>Capacity</th>
+      <th>Available</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for s in slots %}
+    <tr>
+      <td>{{ s.date }}</td>
+      <td>{{ s.start_time.strftime('%H:%M') }} – {{ s.end_time.strftime('%H:%M') }}</td>
+      <td>{{ s.examiner.full_name }}</td>
+      <td>{{ s.capacity }}</td>
+      <td>{{ s.capacity - (s.bookings|selectattr('status', 'equalto', 'Booked')|list|length) }}</td>
+      <td>
+        {% if can_book %}
+          <form action="{{ url_for('student.book_slot', slot_id=s.id) }}" method="POST" class="d-inline">
+            <button class="btn btn-sm btn-success">Book</button>
+          </form>
+        {% else %}
+          <span class="text-muted">—</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6" class="text-center">No available slots.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
