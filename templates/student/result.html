@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Result{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between mb-3">
+  <h2>Result: {{ booking.exam.title }}</h2>
+  <a href="{{ url_for('student.my_bookings') }}" class="btn btn-secondary">Back</a>
+</div>
+
+<div class="alert alert-info">
+  Student: <strong>{{ booking.student.full_name }}</strong><br>
+  Examiner: {{ booking.slot.examiner.full_name }}<br>
+  Date: {{ booking.slot.date }} {{ booking.slot.start_time.strftime('%H:%M') }}
+</div>
+
+<table class="table table-bordered">
+  <thead class="table-dark">
+    <tr>
+      <th>Criterion</th>
+      <th>Max Marks</th>
+      <th>Marks Obtained</th>
+      <th>Remarks</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for ev in booking.evaluations %}
+    <tr>
+      <td>{{ ev.rubric.criterion }}</td>
+      <td>{{ ev.rubric.max_marks }}</td>
+      <td>{{ ev.marks }}</td>
+      <td>{{ ev.remarks or '-' }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+  <tfoot>
+    <tr class="table-secondary">
+      <th colspan="2">Total</th>
+      <th>{{ total }} / {{ max_total }}</th>
+      <th></th>
+    </tr>
+  </tfoot>
+</table>
+{% endblock %}

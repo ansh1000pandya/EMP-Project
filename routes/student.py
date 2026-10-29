@@ -96,17 +96,42 @@ def book_slot(slot_id):
         flash('This slot is no longer available.', 'danger')
         return redirect(url_for('student.exam_slots', exam_id=exam.id))
 
-    # 3. No duplicate booking for same exam
+    # 3. Check if student already has any booking for this exam
     existing = Booking.query.filter_by(
         student_id=current_user.id,
-        exam_id=exam.id,
-        status='Booked'
+        exam_id=exam.id
     ).first()
-    if existing:
-        flash('You have already booked a slot for this exam.', 'danger')
-        return redirect(url_for('student.exam_slots', exam_id=exam.id))
 
-    # 4. Capacity check
+    if existing:
+        if existing.status == 'Booked':
+            flash('You have already booked a slot for this exam.', 'danger')
+            return redirect(url_for('student.exam_slots', exam_id=exam.id))
+        elif existing.status == 'Cancelled':
+            # Reactivate the old cancelled booking
+            existing.status = 'Booked'
+            existing.slot_id = slot.id
+            existing.booked_at = datetime.utcnow()
+            existing.cancelled_at = None
+            existing.published = False
+
+            # Clear old evaluations if any
+            for ev in existing.evaluations:
+                db.session.delete(ev)
+
+            # Capacity check
+            current_bookings = Booking.query.filter_by(slot_id=slot.id, status='Booked').count()
+            if current_bookings >= slot.capacity:
+                flash('Sorry, this slot has just become full.', 'danger')
+                return redirect(url_for('student.exam_slots', exam_id=exam.id))
+
+            if current_bookings + 1 >= slot.capacity:
+                slot.status = 'Full'
+
+            db.session.commit()
+            flash('Slot booked successfully! (Reactivated previous booking)', 'success')
+            return redirect(url_for('student.dashboard'))
+
+    # 4. Capacity check for new booking
     current_bookings = Booking.query.filter_by(slot_id=slot.id, status='Booked').count()
     if current_bookings >= slot.capacity:
         slot.status = 'Full'
@@ -114,7 +139,7 @@ def book_slot(slot_id):
         flash('Sorry, this slot has just become full.', 'danger')
         return redirect(url_for('student.exam_slots', exam_id=exam.id))
 
-    # Create booking
+    # Create new booking
     booking = Booking(
         student_id=current_user.id,
         exam_id=exam.id,
@@ -181,3 +206,27 @@ def my_bookings():
     bookings = Booking.query.filter_by(student_id=current_user.id)\
                             .order_by(Booking.booked_at.desc()).all()
     return render_template('student/bookings.html', bookings=bookings)
+# ------------------------------------------------------------------
+# VIEW RESULT (only if published)
+# ------------------------------------------------------------------
+@student_bp.route('/bookings/<int:booking_id>/result')
+@role_required('student')
+def view_result(booking_id):
+    booking = Booking.query.get_or_404(booking_id)
+
+    if booking.student_id != current_user.id:
+        flash('Unauthorized.', 'danger')
+        return redirect(url_for('student.my_bookings'))
+
+    if not booking.published:
+        flash('Result is not yet published.', 'warning')
+        return redirect(url_for('student.my_bookings'))
+
+    # Calculate total
+    total = sum(ev.marks or 0 for ev in booking.evaluations)
+    max_total = sum(ev.rubric.max_marks for ev in booking.evaluations)
+
+    return render_template('student/result.html',
+                           booking=booking,
+                           total=total,
+                           max_total=max_total)

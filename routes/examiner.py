@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import current_user
 from decorators import approved_examiner_required
-from models import db, Exam, Slot, ExamExaminer, Booking
+from models import db, Exam, Slot, ExamExaminer, Booking, Evaluation
 from datetime import datetime, date, time
 
 examiner_bp = Blueprint('examiner', __name__, url_prefix='/examiner')
@@ -228,3 +228,125 @@ def delete_slot(slot_id):
     db.session.commit()
     flash('Slot cancelled.', 'success')
     return redirect(url_for('examiner.exam_slots', exam_id=exam.id))
+# ------------------------------------------------------------------
+# VIEW BOOKED STUDENTS FOR MY SLOTS
+# ------------------------------------------------------------------
+@examiner_bp.route('/evaluations')
+@approved_examiner_required
+def evaluations():
+    # All bookings on slots created by this examiner
+    bookings = Booking.query.join(Slot).filter(
+        Slot.examiner_id == current_user.id,
+        Booking.status.in_(['Booked', 'Completed'])
+    ).order_by(Booking.booked_at.desc()).all()
+
+    return render_template('examiner/evaluations.html', bookings=bookings)
+
+
+# ------------------------------------------------------------------
+# EVALUATE ONE STUDENT
+# ------------------------------------------------------------------
+@examiner_bp.route('/bookings/<int:booking_id>/evaluate', methods=['GET', 'POST'])
+@approved_examiner_required
+def evaluate(booking_id):
+    booking = Booking.query.get_or_404(booking_id)
+
+    # Security: only the examiner who owns the slot can evaluate
+    if booking.slot.examiner_id != current_user.id:
+        flash('You can only evaluate students booked in your own slots.', 'danger')
+        return redirect(url_for('examiner.evaluations'))
+
+    exam = booking.exam
+    rubrics = exam.rubrics
+
+    if not rubrics:
+        flash('No rubrics defined for this exam. Contact Admin.', 'warning')
+        return redirect(url_for('examiner.evaluations'))
+
+    # Existing evaluations (if any)
+    existing = {ev.rubric_id: ev for ev in booking.evaluations}
+
+    if request.method == 'POST':
+        total = 0
+        for rubric in rubrics:
+            marks = request.form.get(f'marks_{rubric.id}')
+            remarks = request.form.get(f'remarks_{rubric.id}', '').strip()
+
+            if marks is None or marks == '':
+                flash(f'Marks required for: {rubric.criterion}', 'danger')
+                return redirect(url_for('examiner.evaluate', booking_id=booking_id))
+
+            try:
+                marks = float(marks)
+            except ValueError:
+                flash('Invalid marks value.', 'danger')
+                return redirect(url_for('examiner.evaluate', booking_id=booking_id))
+
+            if marks < 0 or marks > rubric.max_marks:
+                flash(f'Marks for {rubric.criterion} must be between 0 and {rubric.max_marks}.', 'danger')
+                return redirect(url_for('examiner.evaluate', booking_id=booking_id))
+
+            # Update or create evaluation
+            if rubric.id in existing:
+                ev = existing[rubric.id]
+                ev.marks = marks
+                ev.remarks = remarks or None
+                ev.evaluated_at = datetime.utcnow()
+            else:
+                ev = Evaluation(
+                    booking_id=booking.id,
+                    rubric_id=rubric.id,
+                    marks=marks,
+                    remarks=remarks or None
+                )
+                db.session.add(ev)
+
+            total += marks
+
+        # Mark booking as Completed
+        booking.status = 'Completed'
+        db.session.commit()
+        flash(f'Evaluation submitted successfully. Total: {total}', 'success')
+        return redirect(url_for('examiner.evaluations'))
+
+    return render_template('examiner/evaluate.html',
+                           booking=booking,
+                           rubrics=rubrics,
+                           existing=existing)
+
+
+# ------------------------------------------------------------------
+# PUBLISH / UNPUBLISH RESULT
+# ------------------------------------------------------------------
+@examiner_bp.route('/bookings/<int:booking_id>/publish', methods=['POST'])
+@approved_examiner_required
+def publish_result(booking_id):
+    booking = Booking.query.get_or_404(booking_id)
+
+    if booking.slot.examiner_id != current_user.id:
+        flash('Unauthorized.', 'danger')
+        return redirect(url_for('examiner.evaluations'))
+
+    if not booking.evaluations:
+        flash('Cannot publish. Evaluation not submitted yet.', 'warning')
+        return redirect(url_for('examiner.evaluations'))
+
+    booking.published = True
+    db.session.commit()
+    flash('Result published. Student can now view it.', 'success')
+    return redirect(url_for('examiner.evaluations'))
+
+
+@examiner_bp.route('/bookings/<int:booking_id>/unpublish', methods=['POST'])
+@approved_examiner_required
+def unpublish_result(booking_id):
+    booking = Booking.query.get_or_404(booking_id)
+
+    if booking.slot.examiner_id != current_user.id:
+        flash('Unauthorized.', 'danger')
+        return redirect(url_for('examiner.evaluations'))
+
+    booking.published = False
+    db.session.commit()
+    flash('Result unpublished.', 'info')
+    return redirect(url_for('examiner.evaluations'))

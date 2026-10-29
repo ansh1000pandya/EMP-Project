@@ -20,7 +20,7 @@
     <div class="card text-center">
       <div class="card-body">
         <h3>{{ my_slots|length }}</h3>
-        <small>My Slots</small>
+        <small>My slots</small>
       </div>
     </div>
   </div>
@@ -37,6 +37,9 @@
 <div class="list-group">
   <a href="{{ url_for('examiner.my_exams') }}" class="list-group-item list-group-item-action">
     View My Assigned Exams & Create Slots
+  </a>
+  <a href="{{ url_for('examiner.evaluations') }}" class="list-group-item list-group-item-action">
+    Evaluate Students
   </a>
 </div>
 {% endblock %}
